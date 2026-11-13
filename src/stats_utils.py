@@ -1,34 +1,84 @@
-import numpy as np
+
+
+"""Module d'analyse statistique des ventes."""
+
+import math
+
 
 def analyser_ventes(transactions):
-    ventes= np.array(transactions, dtype=float)
-    ventes = ventes[ventes > 0]
+    """Analyse une liste de montants de ventes (en euros).
 
-    if len(ventes) ==0:
-        return None
-    nombre = len(ventes)
-    somme = np.sum(ventes)
-    moyenne = np.mean(ventes)
-    mediane = np.median(ventes)
-    ecart_type = np.std(ventes)
-    maximum = np.max(ventes)
-    minimum = np.min(ventes)
+    - Ignore les valeurs négatives ou nulles (erreurs de saisie).
+    - Calcule nombre, somme, moyenne, médiane, écart-type, min et max.
+    - Détecte les anomalies : transactions > 2 fois la moyenne.
 
-    outliers = ventes[ventes > 2 * moyenne]
+    Retourne un dictionnaire d'indicateurs.
+    """
+    
+    valides = [t for t in transactions if t > 0]
 
+    if not valides:
+        return {
+            "nombre_transactions": 0,
+            "somme_totale": 0,
+            "moyenne": None,
+            "mediane": None,
+            "ecart_type": None,
+            "minimum": None,
+            "maximum": None,
+            "seuil_anomalie": None,
+            "anomalies": [],
+        }
+
+    
+    n = len(valides)
+    somme = sum(valides)
+    moyenne = somme / n
+
+    triees = sorted(valides)
+    milieu = n // 2
+    if n % 2 == 1:
+        mediane = triees[milieu]
+    else:
+        mediane = (triees[milieu - 1] + triees[milieu]) / 2
+
+    variance = sum((x - moyenne) ** 2 for x in valides) / n
+    ecart_type = math.sqrt(variance)
+
+    
+    seuil = 2 * moyenne
+    anomalies = [t for t in valides if t > seuil]
+
+   
     return {
-        "nombre_transactions": nombre,
-        "somme_totale": round(float(somme), 2),
-        "moyenne": round(float(moyenne), 2),
-        "mediane": round(float(mediane), 2),
-        "ecart_type": round(float(ecart_type), 2),
-        "maximum": float(maximum),
-        "minimum": float(minimum),
-        "outliers": outliers.tolist(),
+        "nombre_transactions": n,
+        "somme_totale": somme,
+        "moyenne": moyenne,
+        "mediane": mediane,
+        "ecart_type": ecart_type,
+        "minimum": min(valides),
+        "maximum": max(valides),
+        "seuil_anomalie": seuil,
+        "anomalies": anomalies,
     }
 
-ventes_test = [150, 200, -50, 0, 320, 180, 95, 2500, 210, 175]
-resultats = analyser_ventes(ventes_test)
-print("===RAPPORT STATISTIQUE DE SVENTES ===")
-for indicateur, valeur in resultats.items():
-    print(f"{indicateur} : {valeur}")
+
+if __name__ == "__main__":
+    
+    ventes_test = [150, 200, 175, -50, 0, 220, 180, 195, 210, 2500, 165]
+
+    resultats = analyser_ventes(ventes_test)
+
+    print("=" * 40)
+    print("     RAPPORT STATISTIQUE DES VENTES")
+    print("=" * 40)
+    print(f"Transactions valides : {resultats['nombre_transactions']}")
+    print(f"Somme totale         : {resultats['somme_totale']:.2f} €")
+    print(f"Moyenne              : {resultats['moyenne']:.2f} €")
+    print(f"Médiane              : {resultats['mediane']:.2f} €")
+    print(f"Écart-type           : {resultats['ecart_type']:.2f} €")
+    print(f"Minimum              : {resultats['minimum']:.2f} €")
+    print(f"Maximum              : {resultats['maximum']:.2f} €")
+    print(f"Seuil d'anomalie     : {resultats['seuil_anomalie']:.2f} €")
+    print(f"Anomalies détectées  : {resultats['anomalies']}")
+    print("=" * 40)
